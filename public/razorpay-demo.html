@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Razorpay Demo</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background-color: #f0f2f5; }
+        .container { text-align: center; background-color: #fff; padding: 40px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        h1 { color: #333; }
+        p { color: #666; margin-bottom: 24px; }
+        #rzp-button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 4px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        #rzp-button:hover { background-color: #0056b3; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Razorpay Integration Demo</h1>
+        <p>Click the button below to launch the Razorpay checkout.</p>
+        <button id="rzp-button">Pay with Razorpay</button>
+    </div>
+
+    <!-- Razorpay Checkout Script -->
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
+    <script>
+        // Use a public test key from Razorpay for this demo
+        const RAZORPAY_TEST_KEY = 'rzp_test_1DPvAaVCRnlZ7M';
+
+        const options = {
+            "key": RAZORPAY_TEST_KEY,
+            "amount": "50000", // Amount in paise (e.g., 500.00 INR)
+            "currency": "INR",
+            "name": "Acme Corp",
+            "description": "Test Transaction",
+            "image": "https://example.com/your_logo.jpg",
+            "order_id": "", // An order_id is not required for test mode
+            "handler": function (response){
+                alert("Payment Successful!");
+                alert("Payment ID: " + response.razorpay_payment_id);
+                // You would typically not use an order_id in a simple client-side demo,
+                // but if you had one from your server, you could use it here.
+                // alert("Order ID: " + response.razorpay_order_id);
+                // alert("Signature: " + response.razorpay_signature);
+            },
+            "prefill": {
+                "name": "John Doe",
+                "email": "john.doe@example.com",
+                "contact": "9999999999"
+            },
+            "notes": {
+                "address": "Razorpay Corporate Office"
+            },
+            "theme": {
+                "color": "#3399cc"
+            }
+        };
+
+        const rzp = new Razorpay(options);
+
+        document.getElementById('rzp-button').onclick = function(e){
+            rzp.open();
+            e.preventDefault();
+        }
+    </script>
+</body>
+</html>

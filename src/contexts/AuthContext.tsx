@@ -32,63 +32,48 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const { toast } = useToast();
 
   useEffect(() => {
-    setLoading(true);
+    const fetchUserRole = async (user: User) => {
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', user.id)
+          .single();
+        if (error) throw error;
+        setUserRole(data?.role || 'customer');
+      } catch (error) {
+        console.error('Error fetching user role:', error);
+        setUserRole('customer'); // Default role on error
+      }
+    };
 
-    // Bootstrap existing session
-    const initAuth = async () => {
-      const { data: { session: existingSession } } = await supabase.auth.getSession();
-      setSession(existingSession);
-      const currentUser = existingSession?.user ?? null;
+    const bootstrapAuth = async () => {
+      setLoading(true);
+      const { data: { session } } = await supabase.auth.getSession();
+      setSession(session);
+      const currentUser = session?.user ?? null;
       setUser(currentUser);
-
       if (currentUser) {
-        try {
-          const { data: profile, error } = await supabase
-            .from('profiles')
-            .select('role')
-            .eq('id', currentUser.id)
-            .single();
-          if (error) throw error;
-          setUserRole(profile?.role || 'customer');
-        } catch (error) {
-          console.error('Error fetching initial user role:', error);
-          setUserRole('customer');
-        }
-      } else {
-        setUserRole(null);
+        await fetchUserRole(currentUser);
       }
       setLoading(false);
     };
 
-    initAuth();
+    bootstrapAuth();
 
-    // Listen for future auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       const currentUser = session?.user ?? null;
       setUser(currentUser);
-
       if (currentUser) {
-        try {
-          const { data: profile, error } = await supabase
-            .from('profiles')
-            .select('role')
-            .eq('id', currentUser.id)
-            .single();
-          if (error) throw error;
-          setUserRole(profile?.role || 'customer');
-        } catch (error) {
-          console.error('Error fetching user role:', error);
-          setUserRole('customer');
-        }
+        fetchUserRole(currentUser);
       } else {
         setUserRole(null);
       }
-      setLoading(false);
     });
 
     return () => {
-      subscription.unsubscribe();
+      subscription?.unsubscribe();
     };
   }, []);
 

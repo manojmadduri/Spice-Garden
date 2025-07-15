@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Menu, X, ShoppingCart, User, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -13,6 +13,13 @@ const Navbar = () => {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
   const { getTotalItems } = useCart();
+
+  useEffect(() => {
+    const isAuthPage = location.pathname === '/login';
+    if (!user && !isAuthPage) {
+      navigate('/login');
+    }
+  }, [user, navigate, location.pathname]);
 
   const navigation = [
     { name: 'Home', href: '/' },
@@ -80,10 +87,7 @@ const Navbar = () => {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={async () => {
-                    await signOut();
-                    navigate('/login');
-                  }}
+                  onClick={signOut}
                 >
                   <LogOut className="h-4 w-4 mr-2" />
                   Sign Out
@@ -159,10 +163,9 @@ const Navbar = () => {
                       <span>Profile</span>
                     </Link>
                     <button
-                      onClick={async () => {
-                        await signOut();
+                      onClick={() => {
+                        signOut();
                         setIsMenuOpen(false);
-                        navigate('/login');
                       }}
                       className="flex items-center space-x-2 px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-smooth w-full text-left"
                     >

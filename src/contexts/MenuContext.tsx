@@ -2,6 +2,7 @@ import React, { createContext, useState, useContext, ReactNode, useEffect } from
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from './AuthContext';
 
 export type MenuItem = Database['public']['Tables']['menu_items']['Row'];
 
@@ -18,8 +19,9 @@ interface MenuContextType {
 
 const MenuContext = createContext<MenuContextType | undefined>(undefined);
 
-export const MenuProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+const MenuProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const { toast } = useToast();
+  const { user } = useAuth();
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -54,8 +56,13 @@ export const MenuProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         setLoading(false);
       }
     };
-    fetchMenu();
-  }, []);
+    if (user) {
+      fetchMenu();
+    } else {
+      setMenuItems([]);
+      setLoading(false);
+    }
+  }, [user]);
 
   const addMenuItem = async (itemData: Omit<MenuItem, 'id' | 'created_at' | 'updated_at' | 'available'>) => {
     setLoading(true);
@@ -154,3 +161,5 @@ export const useMenu = () => {
   if (!ctx) throw new Error('useMenu must be inside MenuProvider');
   return ctx;
 };
+
+export default MenuProvider;
