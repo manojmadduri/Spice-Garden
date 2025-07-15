@@ -14,12 +14,6 @@ const Navbar = () => {
   const { user, signOut } = useAuth();
   const { getTotalItems } = useCart();
 
-  useEffect(() => {
-    const isAuthPage = location.pathname === '/login';
-    if (!user && !isAuthPage) {
-      navigate('/login');
-    }
-  }, [user, navigate, location.pathname]);
 
   const navigation = [
     { name: 'Home', href: '/' },

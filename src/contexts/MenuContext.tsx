@@ -56,13 +56,8 @@ const MenuProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
         setLoading(false);
       }
     };
-    if (user) {
-      fetchMenu();
-    } else {
-      setMenuItems([]);
-      setLoading(false);
-    }
-  }, [user]);
+    fetchMenu();
+  }, []);
 
   const addMenuItem = async (itemData: Omit<MenuItem, 'id' | 'created_at' | 'updated_at' | 'available'>) => {
     setLoading(true);
