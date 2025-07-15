@@ -28,7 +28,7 @@ const App = () => (
           <Toaster />
           <Sonner />
           <BrowserRouter>
-            <div className="flex min-h-screen flex-col">
+            <div className="flex min-h-screen flex-col overflow-y-auto">
               <Navbar />
               <main className="flex-1">
                 <Routes>

@@ -9,6 +9,7 @@ import { useCartCalculations } from '@/hooks/useCartCalculations';
 import EmptyCart from '@/components/cart/EmptyCart';
 import CartItem from '@/components/cart/CartItem';
 import CartSummary from '@/components/cart/CartSummary';
+import { supabase } from '@/integrations/supabase/client';
 
 const Cart = () => {
   const { toast } = useToast();
@@ -17,7 +18,7 @@ const Cart = () => {
   const { user } = useAuth();
   const { subtotal, tax, total } = useCartCalculations(getTotalPrice());
 
-  const handleCheckout = () => {
+  const handleCheckout = async () => {
     if (!user) {
       toast({
         title: "Login required",
@@ -27,30 +28,54 @@ const Cart = () => {
       return;
     }
 
-    initiatePayment({
-      amount: total,
-      currency: 'USD',
-      name: user.email || 'Customer',
-      description: 'Spice Garden Order',
-      prefill: {
-        name: user.email,
-        email: user.email
-      },
-      onSuccess: (response) => {
-        clearCart();
-        toast({
-          title: "Payment Successful!",
-          description: "Your order has been placed successfully.",
-        });
-      },
-      onError: (error) => {
-        toast({
-          title: "Payment Failed",
-          description: "There was an error processing your payment.",
-          variant: "destructive"
-        });
-      }
-    });
+    try {
+      const { data, error } = await supabase.functions.invoke('create-razorpay-order', {
+        body: { cart: items, user_id: user.id },
+      });
+
+      if (error) throw error;
+
+      initiatePayment({
+        amount: total,
+        orderId: data.orderId,
+        name: user.email || 'Customer',
+        description: 'Spice Garden Order',
+        prefill: {
+          name: user.email,
+          email: user.email
+        },
+        onSuccess: async (response) => {
+          // Here you would typically verify the payment signature on the backend
+          // and then update the order status in your database.
+          await supabase
+            .from('orders')
+            .update({ 
+              status: 'paid', 
+              razorpay_payment_id: response.razorpay_payment_id 
+            })
+            .eq('id', data.dbOrderId);
+
+          clearCart();
+          toast({
+            title: "Payment Successful!",
+            description: "Your order has been placed successfully.",
+          });
+        },
+        onError: (error) => {
+          toast({
+            title: "Payment Failed",
+            description: "There was an error processing your payment.",
+            variant: "destructive"
+          });
+        }
+      });
+    } catch (error: any) {
+      toast({
+        title: "Checkout Error",
+        description: error.message || "Could not create order. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
   if (items.length === 0) {

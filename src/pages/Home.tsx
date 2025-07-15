@@ -100,8 +100,8 @@ const Home = () => {
                     {dish.price}
                   </div>
                 </div>
-                <Button className="w-full" variant="outline">
-                  Add to Cart
+                <Button className="w-full" variant="outline" asChild>
+                  <Link to="/menu">View Details</Link>
                 </Button>
               </CardHover>
             ))}
